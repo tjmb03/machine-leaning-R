@@ -1,0 +1,89 @@
+---
+title: "Motor Trend: Transmission Type and MPG"
+author: "tjmb03"
+date: "`r Sys.Date()`"
+output:
+  pdf_document:
+    latex_engine: xelatex
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE, fig.path = "figures/")
+library(ggplot2)
+library(dplyr)
+data(mtcars)
+```
+
+## Executive Summary
+
+This report investigates whether manual or automatic transmission vehicles offer better fuel efficiency (measured in MPG) using the `mtcars` dataset. A combination of exploratory data analysis indicates that manual transmissions are associated with higher MPG. However, after adjusting for weight and horsepower, the effect of manual transmission on MPG is not statistically significant, indicating substantial uncertainty about whether manuals truly provide better fuel efficiency. Diagnostic checks support the validity of the regression assumptions, suggesting the model is well-suited for inference.
+
+## 1. Exploratory Data Analysis
+
+```{r eda, fig.width=4, fig.height=3}
+str(mtcars)       # Structure of dataset
+summary(mtcars)   # Summary statistics for all variables
+
+#Pairwise scatterplot matrix of key variables
+pairs(mtcars[, c("mpg", "hp", "wt", "qsec")],
+      main = "Pairwise Scatterplots for MPG, HP, Weight, and Quarter Mile Time")
+
+mtcars$am <- factor(mtcars$am, labels = c("Automatic", "Manual"))
+
+ggplot(mtcars, aes(x = am, y = mpg, fill = am)) +
+  geom_boxplot() +
+  labs(title = "MPG by Transmission Type", x = "Transmission", y = "Miles Per Gallon") +
+  theme_minimal()
+```
+
+The boxplot indicates that manual cars tend to have higher MPG than automatic ones.
+
+## 2. Regression Modeling
+
+### Model 1: MPG ~ Transmission
+
+```{r model1}
+fit1 <- lm(mpg ~ am, data = mtcars)
+summary(fit1)
+confint(fit1)
+```
+
+Manual transmissions are associated with an average increase of ~7.24 MPG over automatic.
+
+### Model 2: MPG ~ Transmission + Weight + Horsepower
+
+```{r model2}
+fit2 <- lm(mpg ~ am + wt + hp, data = mtcars)
+summary(fit2)
+confint(fit2)
+```
+
+After controlling for **weight** and **horsepower**, the effect of manual transmission on MPG is not statistically significant (p = 0.141). The 95% confidence interval (−0.736 to 4.903) includes zero, indicating substantial uncertainty about whether manuals truly provide better fuel efficiency.
+
+## 3. Model Selection Strategy
+
+```{r compare_models}
+AIC(fit1, fit2)
+```
+
+Model 2 is preferred based on lower AIC and higher explanatory power.
+
+## 4. Model Diagnostics
+
+```{r diagnostics}
+par(mfrow = c(2, 2))
+plot(fit2)
+```
+
+Residual plots do not show strong violations of regression assumptions.
+
+## 5. Conclusion
+
+- Manual transmissions are associated with **better MPG** in exploratory analysis.
+- However, after adjusting for weight and horsepower, the effect of manual transmission on MPG is not statistically significant with the 95% confidence interval (−0.736 to 4.903) including zero, which suggests substantial uncertainty about whether manuals truly provide better fuel efficiency.
+- Model diagnostics suggest the linear model is appropriate.
+- Though the dataset is small, findings are statistically and practically meaningful.
+
+## Appendix
+
+(Figures are auto-included when compiled with `knitr`)

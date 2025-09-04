@@ -1,0 +1,115 @@
+
+---
+title: "ToothGrowth Data Analysis"
+author: "tjmb03"
+date: "`r Sys.Date()`"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Introduction
+
+In this report, we analyze the `ToothGrowth` dataset from the `datasets` package in R. The data records the effect of Vitamin C on tooth growth in guinea pigs, using different supplement types (`OJ` and `VC`) and dose levels (0.5, 1.0, 2.0 mg/day).
+
+## Load and Inspect Data
+
+```{r}
+# Load data
+data("ToothGrowth")
+head(ToothGrowth)
+str(ToothGrowth)
+summary(ToothGrowth)
+
+# Convert dose to a factor
+ToothGrowth$dose <- as.factor(ToothGrowth$dose)
+```
+
+## Exploratory Data Analysis
+
+### Tooth Length by Supplement Type
+
+```{r fig.width=4, fig.height=3}
+library(ggplot2)
+
+ggplot(ToothGrowth, aes(x = supp, y = len, fill = supp)) +
+  geom_boxplot() +
+  labs(title = "Tooth Length by Supplement Type", x = "Supplement", y = "Tooth Length") +
+  theme_minimal()
+```
+
+### Tooth Length by Dose
+
+```{r fig.width=4, fig.height=3}
+ggplot(ToothGrowth, aes(x = dose, y = len, fill = dose)) +
+  geom_boxplot() +
+  labs(title = "Tooth Length by Dose", x = "Dose (mg/day)", y = "Tooth Length") +
+  theme_minimal()
+```
+
+### Tooth Length by Supplement and Dose
+
+```{r fig.width=4, fig.height=3}
+ggplot(ToothGrowth, aes(x = dose, y = len, fill = supp)) +
+  geom_boxplot(position = position_dodge()) +
+  labs(title = "Tooth Length by Supplement and Dose", x = "Dose (mg/day)", y = "Tooth Length") +
+  theme_minimal()
+```
+
+## Hypothesis Testing
+
+### 1. Supplement Comparison (OJ vs VC)
+
+```{r}
+# Test Equal Variance Between supp (OJ vs VC)
+var.test(len ~ supp, data = ToothGrowth)
+#run t-test
+t_supp <- t.test(len ~ supp, data = ToothGrowth, var.equal = TRUE)
+t_supp
+```
+
+**95% Confidence Interval**:
+```{r}
+t_supp$conf.int
+```
+
+### 2. Dose Comparisons (0.5, 1.0, 2.0)
+
+```{r}
+##Test Equal Variance Between Dose Groups (pairwise)
+# Dose 0.5 vs 1.0
+var.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(0.5, 1.0)))
+# Dose 1.0 vs 2.0
+var.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(1.0, 2.0)))
+# Dose 0.5 vs 2.0
+var.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(0.5, 2.0)))
+
+# Pairwise t-tests
+pairwise.t.test(ToothGrowth$len, ToothGrowth$dose, p.adj = "none")
+```
+
+#### Manual Confidence Intervals
+
+```{r}
+t_05_10 <- t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(0.5, 1.0)), var.equal = TRUE)
+t_10_20 <- t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(1.0, 2.0)), var.equal = TRUE)
+t_05_20 <- t.test(len ~ dose, data = subset(ToothGrowth, dose %in% c(0.5, 2.0)), var.equal = TRUE)
+
+t_05_10$conf.int
+t_10_20$conf.int
+t_05_20$conf.int
+```
+
+## Conclusions
+
+- There is a difference with no significance (p=0.06, 95% Confidence Interval) in tooth length between supplement types: **OJ** tends to result in higher tooth length than **VC**.
+- There is also a statistically significant difference in tooth length among all doses. Higher doses lead to longer tooth growth.
+- All three pairwise dose comparisons showed significant differences, supported by t-tests and 95% confidence intervals.
+
+## Assumptions
+
+- Independent and random sampling
+- Approximate normality (reasonable due to sample size)
+- Equal variances are handled using standard t-test

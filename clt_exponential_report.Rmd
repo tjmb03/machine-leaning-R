@@ -1,0 +1,98 @@
+
+---
+title: "Exploring the Central Limit Theorem with the Exponential Distribution"
+author: "tjmb03"
+date: "2025-07-30"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+set.seed(1234)
+```
+
+## Overview
+
+This report demonstrates the Central Limit Theorem (CLT) using the exponential distribution. Specifically, I simulate the distribution of the mean of 40 exponential random variables with a rate parameter lambda = 0.2, repeated 1000 times. We compare the empirical sample statistics with theoretical values and visually assess the normality of the resulting distribution of sample means.
+
+## Simulations
+
+```{r}
+lambda <- 0.2
+n <- 40
+simulations <- 1000
+
+# Simulate 1000 means of 40 exponentials each
+exp_means <- replicate(simulations, mean(rexp(n, rate = lambda)))
+```
+
+## Sample Mean versus Theoretical Mean
+
+```{r}
+sample_mean <- mean(exp_means)
+theoretical_mean <- 1 / lambda
+
+cat("Sample Mean:", sample_mean, "\n")
+cat("Theoretical Mean:", theoretical_mean, "\n")
+```
+
+### Histogram: Distribution of Sample Means with Mean Lines
+
+```{r}
+hist(exp_means, probability = TRUE, breaks = 30, col = "lightblue",
+     main = "Histogram of Sample Means (40 Exponentials, 1000 Simulations)",
+     xlab = "Sample Mean")
+abline(v = sample_mean, col = "blue", lwd = 2)
+abline(v = theoretical_mean, col = "red", lwd = 2, lty = 2)
+legend("topright", legend = c("Sample Mean", "Theoretical Mean"),
+       col = c("blue", "red"), lty = c(1, 2), lwd = 2)
+```
+
+## Sample Variance versus Theoretical Variance
+
+```{r}
+sample_var <- var(exp_means)
+theoretical_var <- (1 / lambda)^2 / n
+
+cat("Sample Variance:", sample_var, "\n")
+cat("Theoretical Variance:", theoretical_var, "\n")
+```
+
+## Distribution: Normality Assessment
+
+```{r}
+# Histogram with normal curve
+hist(exp_means, probability = TRUE, breaks = 30, col = "lightblue",
+     main = "Distribution of Averages of 40 Exponentials",
+     xlab = "Average Value")
+curve(dnorm(x, mean = mean(exp_means), sd = sd(exp_means)), 
+      col = "red", lwd = 2, add = TRUE)
+
+# QQ Plot
+qqnorm(exp_means, main = "QQ Plot of Averages of 40 Exponentials")
+qqline(exp_means, col = "red")
+```
+
+## Motivating Example: Uniform Distribution Comparison
+
+```{r}
+# Raw uniforms
+uniform_vals <- runif(1000)
+
+# Averages of 40 uniforms
+uniform_means <- replicate(1000, mean(runif(40)))
+
+# Histograms
+hist(uniform_vals, probability = TRUE, breaks = 30, col = "lightgreen",
+     main = "Histogram of 1000 Random Uniform(0,1) Values", xlab = "Value")
+
+hist(uniform_means, probability = TRUE, breaks = 30, col = "lightcoral",
+     main = "Histogram of Averages of 40 Uniform(0,1) Values", xlab = "Average Value")
+```
+
+## Final Summary
+
+- The Central Limit Theorem is verified using the exponential distribution.
+- Even though the exponential distribution is skewed, the distribution of sample means approximates a normal distribution.
+- Sample mean and variance match theoretical expectations.
+- The same trend is observed with uniform distributions, reinforcing the CLT.
